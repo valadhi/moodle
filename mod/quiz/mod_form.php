@@ -44,6 +44,8 @@ class mod_quiz_mod_form extends moodleform_mod {
 
     /** @var int the max number of attempts allowed in any user or group override on this quiz. */
     protected $maxattemptsanyoverride = null;
+    /** @var int the closedate set by override. */
+    protected $closedateanyoverride = null;
 
     public function __construct($current, $section, $cm, $course) {
         self::$reviewfields = array(
@@ -242,8 +244,10 @@ class mod_quiz_mod_form extends moodleform_mod {
                 'neq', 'wontmatch');
         $mform->disabledIf('overallfeedbackduring', 'preferredbehaviour',
                 'neq', 'wontmatch');
-        foreach (self::$reviewfields as $field => $notused) {
-            $mform->disabledIf($field . 'closed', 'timeclose[enabled]');
+        if (empty($this->get_close_date_for_any_override())) {
+            foreach (self::$reviewfields as $field => $notused) {
+                $mform->disabledIf($field . 'closed', 'timeclose[enabled]');
+            }
         }
 
         // -------------------------------------------------------------------------------
@@ -647,6 +651,29 @@ class mod_quiz_mod_form extends moodleform_mod {
         return !empty($data['completionattemptsexhausted']) || !empty($data['completionpass']);
     }
 
+    /**
+     * Return closedate set by override, 0 if none exists
+     * @return int|mixed|null
+     * @throws dml_exception
+     */
+    public function get_close_date_for_any_override() {
+        global $DB;
+
+        if (empty($this->_instance)) {
+            return 0;
+        }
+
+        if ($this->closedateanyoverride === null) {
+            $this->closedateanyoverride = $DB->get_field_sql("
+                SELECT timeclose FROM {quiz_overrides} WHERE quiz = ?",
+                array($this->_instance));
+
+            if (empty($this->closedateanyoverride)) {
+                $this->closedateanyoverride = 0;
+            }
+        }
+        return $this->closedateanyoverride;
+    }
     /**
      * Get the maximum number of attempts that anyone might have due to a user
      * or group override. Used to decide whether disabledIf rules should be applied.
