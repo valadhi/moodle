@@ -31,6 +31,7 @@ require_once(__DIR__ . '/fixtures/test_indicator_null.php');
 require_once(__DIR__ . '/fixtures/test_indicator_fullname.php');
 require_once(__DIR__ . '/fixtures/test_indicator_random.php');
 require_once(__DIR__ . '/fixtures/test_target_shortname.php');
+require_once(__DIR__ . '/fixtures/test_target_shortname_multiclass.php');
 require_once(__DIR__ . '/fixtures/test_static_target_shortname.php');
 
 require_once(__DIR__ . '/../../course/lib.php');
@@ -434,6 +435,70 @@ class core_analytics_prediction_testcase extends advanced_testcase {
     }
 
     /**
+     * @dataProvider provider_test_multi_classifier
+     * @param $success
+     * @param $nsamples
+     * @param $classes
+     * @param $predictionsprocessorclass
+     */
+    public function test_ml_multi_classifier($timesplittingid, $predictionsprocessorclass) {
+        global $DB;
+
+        $this->resetAfterTest(true);
+        $this->setAdminuser();
+        set_config('enabled_stores', 'logstore_standard', 'tool_log');
+
+        $predictionsprocessor = \core_analytics\manager::get_predictions_processor($predictionsprocessorclass, false);
+        if ($predictionsprocessor->is_ready() !== true) {
+            $this->markTestSkipped('Skipping ' . $predictionsprocessorclass . ' as the predictor is not ready.');
+        }
+        // Generate training courses.
+        $ncourses = 10;
+        $this->generate_courses($ncourses);
+
+        $model = $this->add_perfect_model($targetclass="test_target_shortname_multiclass");
+
+        $model->update(true, false, $timesplittingid, get_class($predictionsprocessor));
+//
+//        // No samples trained yet.
+        $this->assertEquals(0, $DB->count_records('analytics_train_samples', array('modelid' => $model->get_id())));
+//
+        $results = $model->train();
+        $this->assertEquals(1, $model->is_enabled());
+        $this->assertEquals(1, $model->is_trained());
+
+        $params = [
+            'startdate' => mktime(0, 0, 0, 10, 24, 2015),
+            'enddate' => mktime(0, 0, 0, 2, 24, 2016),
+        ];
+        $courseparams = $params + array('shortname' => 'aaaaaa', 'fullname' => 'aaaaaa', 'visible' => 0);
+        $course1 = $this->getDataGenerator()->create_course($courseparams);
+        $courseparams = $params + array('shortname' => 'bbbbbb', 'fullname' => 'bbbbbb', 'visible' => 0);
+        $course2 = $this->getDataGenerator()->create_course($courseparams);
+
+        // They will not be skipped for prediction though.
+        $result = $model->predict();
+
+        // Var $course1 predictions should be 1 == 'a', $course2 predictions should be 0 == 'b'.
+        $correct = array($course1->id => 1, $course2->id => 0);
+        foreach ($result->predictions as $uniquesampleid => $predictiondata) {
+            list($sampleid, $rangeindex) = $model->get_time_splitting()->infer_sample_info($uniquesampleid);
+
+            // The range index is not important here, both ranges prediction will be the same.
+            $this->assertEquals($correct[$sampleid], $predictiondata->prediction);
+        }
+    }
+
+    public function provider_test_multi_classifier() {
+        $cases = array(
+            '3' => array('\core\analytics\time_splitting\no_splitting'),
+        );
+
+        // Add all system prediction processors
+        return $this->add_prediction_processors($cases);
+    }
+
+    /**
      * Basic test to check that prediction processors work as expected.
      *
      * @dataProvider provider_ml_test_evaluation_configuration
@@ -661,7 +726,6 @@ class core_analytics_prediction_testcase extends advanced_testcase {
      * @return \core_analytics\model
      */
     protected function add_perfect_model($targetclass = 'test_target_shortname') {
-
         $target = \core_analytics\manager::get_target($targetclass);
         $indicators = array('test_indicator_max', 'test_indicator_min', 'test_indicator_fullname');
         foreach ($indicators as $key => $indicator) {
@@ -695,6 +759,30 @@ class core_analytics_prediction_testcase extends advanced_testcase {
         }
         for ($i = 0; $i < $ncourses; $i++) {
             $name = 'b' . random_string(10);
+            $courseparams = array('shortname' => $name, 'fullname' => $name) + $params;
+            $this->getDataGenerator()->create_course($courseparams);
+        }
+    }
+
+    protected function generate_courses_multiclass($ncourses, array $params = []) {
+
+        $params = $params + [
+                'startdate' => mktime(0, 0, 0, 10, 24, 2015),
+                'enddate' => mktime(0, 0, 0, 2, 24, 2016),
+            ];
+
+        for ($i = 0; $i < $ncourses; $i++) {
+            $name = 'a' . random_string(10);
+            $courseparams = array('shortname' => $name, 'fullname' => $name) + $params;
+            $this->getDataGenerator()->create_course($courseparams);
+        }
+        for ($i = 0; $i < $ncourses; $i++) {
+            $name = 'b' . random_string(10);
+            $courseparams = array('shortname' => $name, 'fullname' => $name) + $params;
+            $this->getDataGenerator()->create_course($courseparams);
+        }
+        for ($i = 0; $i < $ncourses; $i++) {
+            $name = 'c' . random_string(10);
             $courseparams = array('shortname' => $name, 'fullname' => $name) + $params;
             $this->getDataGenerator()->create_course($courseparams);
         }
