@@ -53,7 +53,7 @@ class test_target_shortname_multiclass extends \core_analytics\local\target\mult
      * We don't want to discard results.
      * @return array
      */
-    protected function ignored_predicted_classes() {
+    public function ignored_predicted_classes() {
         return array();
     }
 
