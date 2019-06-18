@@ -454,7 +454,7 @@ class core_analytics_prediction_testcase extends advanced_testcase {
         }
         // Generate training courses.
         $ncourses = 10;
-        $this->generate_courses($ncourses);
+        $this->generate_courses_multiclass($ncourses);
 
         $model = $this->add_perfect_model($targetclass="test_target_shortname_multiclass");
 
@@ -475,12 +475,14 @@ class core_analytics_prediction_testcase extends advanced_testcase {
         $course1 = $this->getDataGenerator()->create_course($courseparams);
         $courseparams = $params + array('shortname' => 'bbbbbb', 'fullname' => 'bbbbbb', 'visible' => 0);
         $course2 = $this->getDataGenerator()->create_course($courseparams);
+        $courseparams = $params + array('shortname' => 'cccccc', 'fullname' => 'cccccc', 'visible' => 0);
+        $course3 = $this->getDataGenerator()->create_course($courseparams);
 
         // They will not be skipped for prediction though.
         $result = $model->predict();
 
-        // Var $course1 predictions should be 1 == 'a', $course2 predictions should be 0 == 'b'.
-        $correct = array($course1->id => 1, $course2->id => 0);
+        // $course1 predictions should be 0 == 'a', $course2 should be 1 == 'b' and $course3 should be 2 == 'c'
+        $correct = array($course1->id => 0, $course2->id => 1, $course3->id => 2);
         foreach ($result->predictions as $uniquesampleid => $predictiondata) {
             list($sampleid, $rangeindex) = $model->get_time_splitting()->infer_sample_info($uniquesampleid);
 
