@@ -459,10 +459,7 @@ class core_analytics_prediction_testcase extends advanced_testcase {
         $model = $this->add_perfect_model($targetclass="test_target_shortname_multiclass");
 
         $model->update(true, false, $timesplittingid, get_class($predictionsprocessor));
-//
-//        // No samples trained yet.
-        $this->assertEquals(0, $DB->count_records('analytics_train_samples', array('modelid' => $model->get_id())));
-//
+
         $results = $model->train();
         $this->assertEquals(1, $model->is_enabled());
         $this->assertEquals(1, $model->is_trained());
@@ -480,7 +477,6 @@ class core_analytics_prediction_testcase extends advanced_testcase {
 
         // They will not be skipped for prediction though.
         $result = $model->predict();
-
         // $course1 predictions should be 0 == 'a', $course2 should be 1 == 'b' and $course3 should be 2 == 'c'
         $correct = array($course1->id => 0, $course2->id => 1, $course3->id => 2);
         foreach ($result->predictions as $uniquesampleid => $predictiondata) {
