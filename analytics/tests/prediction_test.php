@@ -30,6 +30,7 @@ require_once(__DIR__ . '/fixtures/test_indicator_min.php');
 require_once(__DIR__ . '/fixtures/test_indicator_null.php');
 require_once(__DIR__ . '/fixtures/test_indicator_fullname.php');
 require_once(__DIR__ . '/fixtures/test_indicator_random.php');
+require_once(__DIR__ . '/fixtures/test_indicator_multiclass.php');
 require_once(__DIR__ . '/fixtures/test_target_shortname.php');
 require_once(__DIR__ . '/fixtures/test_target_shortname_multiclass.php');
 require_once(__DIR__ . '/fixtures/test_static_target_shortname.php');
@@ -453,10 +454,10 @@ class core_analytics_prediction_testcase extends advanced_testcase {
             $this->markTestSkipped('Skipping ' . $predictionsprocessorclass . ' as the predictor is not ready.');
         }
         // Generate training courses.
-        $ncourses = 10;
+        $ncourses = 5;
         $this->generate_courses_multiclass($ncourses);
 
-        $model = $this->add_perfect_model($targetclass="test_target_shortname_multiclass");
+        $model = $this->add_multiclass_model();
 
         $model->update(true, false, $timesplittingid, get_class($predictionsprocessor));
 
@@ -733,6 +734,17 @@ class core_analytics_prediction_testcase extends advanced_testcase {
         $model = \core_analytics\model::create($target, $indicators);
 
         // To load db defaults as well.
+        return new \core_analytics\model($model->get_id());
+    }
+
+    public function add_multiclass_model($targetclass = 'test_target_shortname_multiclass') {
+        $target = \core_analytics\manager::get_target($targetclass);
+        $indicators = array('test_indicator_fullname', 'test_indicator_multiclass');
+        foreach ($indicators as $key => $indicator) {
+            $indicators[$key] = \core_analytics\manager::get_indicator($indicator);
+        }
+
+        $model = \core_analytics\model::create($target, $indicators);
         return new \core_analytics\model($model->get_id());
     }
 
