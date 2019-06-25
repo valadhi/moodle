@@ -456,14 +456,9 @@ class core_analytics_prediction_testcase extends advanced_testcase {
         // Generate training courses.
         $ncourses = 5;
         $this->generate_courses_multiclass($ncourses);
-
         $model = $this->add_multiclass_model();
-
         $model->update(true, false, $timesplittingid, get_class($predictionsprocessor));
-
         $results = $model->train();
-        $this->assertEquals(1, $model->is_enabled());
-        $this->assertEquals(1, $model->is_trained());
 
         $params = [
             'startdate' => mktime(0, 0, 0, 10, 24, 2015),
@@ -490,7 +485,7 @@ class core_analytics_prediction_testcase extends advanced_testcase {
 
     public function provider_test_multi_classifier() {
         $cases = array(
-            '3' => array('\core\analytics\time_splitting\no_splitting'),
+            'notimesplitting' => array('\core\analytics\time_splitting\no_splitting'),
         );
 
         // Add all system prediction processors
