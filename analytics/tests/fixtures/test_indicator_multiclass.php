@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: vlad
- * Date: 6/23/2019
- * Time: 3:14 PM
- */
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -20,13 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Test indicator.
  *
  * @package   core_analytics
+ * @copyright 2019 Vlad Apetrei
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 class test_indicator_multiclass extends \core_analytics\local\indicator\linear {
 
     /**

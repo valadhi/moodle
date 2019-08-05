@@ -436,11 +436,13 @@ class core_analytics_prediction_testcase extends advanced_testcase {
     }
 
     /**
+     * Tests correct multi-classification.
+     *
      * @dataProvider provider_test_multi_classifier
-     * @param $success
-     * @param $nsamples
-     * @param $classes
+     * @param $timesplittingid
      * @param $predictionsprocessorclass
+     * @throws coding_exception
+     * @throws moodle_exception
      */
     public function test_ml_multi_classifier($timesplittingid, $predictionsprocessorclass) {
         global $DB;
@@ -473,7 +475,7 @@ class core_analytics_prediction_testcase extends advanced_testcase {
 
         // They will not be skipped for prediction though.
         $result = $model->predict();
-        // $course1 predictions should be 0 == 'a', $course2 should be 1 == 'b' and $course3 should be 2 == 'c'
+        // The $course1 predictions should be 0 == 'a', $course2 should be 1 == 'b' and $course3 should be 2 == 'c'.
         $correct = array($course1->id => 0, $course2->id => 1, $course3->id => 2);
         foreach ($result->predictions as $uniquesampleid => $predictiondata) {
             list($sampleid, $rangeindex) = $model->get_time_splitting()->infer_sample_info($uniquesampleid);
@@ -483,6 +485,11 @@ class core_analytics_prediction_testcase extends advanced_testcase {
         }
     }
 
+    /**
+     * Provider for the multi_classification test.
+     *
+     * @return array
+     */
     public function provider_test_multi_classifier() {
         $cases = array(
             'notimesplitting' => array('\core\analytics\time_splitting\no_splitting'),
@@ -732,6 +739,14 @@ class core_analytics_prediction_testcase extends advanced_testcase {
         return new \core_analytics\model($model->get_id());
     }
 
+    /**
+     * Generates model for multi-classification
+     *
+     * @param string $targetclass
+     * @return \core_analytics\model
+     * @throws coding_exception
+     * @throws moodle_exception
+     */
     public function add_multiclass_model($targetclass = 'test_target_shortname_multiclass') {
         $target = \core_analytics\manager::get_target($targetclass);
         $indicators = array('test_indicator_fullname', 'test_indicator_multiclass');
@@ -769,6 +784,12 @@ class core_analytics_prediction_testcase extends advanced_testcase {
         }
     }
 
+    /**
+     * Generates ncourses for multi-classification
+     *
+     * @param $ncourses
+     * @param array $params
+     */
     protected function generate_courses_multiclass($ncourses, array $params = []) {
 
         $params = $params + [
