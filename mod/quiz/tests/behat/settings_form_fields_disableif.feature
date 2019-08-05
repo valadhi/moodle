@@ -22,26 +22,6 @@ Feature: Settings form fields disabled if not required
     And I am on "Course 1" course homepage with editing mode on
 
   @javascript
-  Scenario: If there is an override on quiz close date, after close review options are enabled
-    When I add a "Quiz" to section "1"
-    And I expand all fieldsets
-    And I set the field "Name" to "Test quiz"
-
-    When I press "Save and display"
-    And I navigate to "User overrides" in current page administration
-    And I press "Add user override"
-    And I set the following fields to these values:
-      | Override user    | Student1 |
-    And I set the field "id_timeclose_enabled" to "1"
-    And I press "Save"
-    And I follow "Test quiz"
-    And I navigate to "Edit settings" in current page administration
-    And I expand all fieldsets
-    Then the "id_attemptclosed" "checkbox" should be enabled
-    Then the "id_marksclosed" "checkbox" should be enabled
-    Then the "id_overallfeedbackclosed" "checkbox" should be enabled
-
-  @javascript
   Scenario: Depending on the number of attempts, different form fields are disabled.
     When I add a "Quiz" to section "1"
     And I expand all fieldsets
